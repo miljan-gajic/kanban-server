@@ -16,4 +16,16 @@ export class AuthController {
   signin(@Body() dto: AuthDto) {
     return this.authService.login(dto);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  logout() {
+    return this.logout();
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  refreshTokens() {
+    return this.refreshTokens();
+  }
 }
