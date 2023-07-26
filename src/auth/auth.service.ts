@@ -9,7 +9,7 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from './constants/tokens.constants';
 import { AuthDto } from './dto';
-import { Tokens } from './types';
+import { LoginResponse, Tokens } from './types';
 
 @Injectable()
 export class AuthService {
@@ -19,11 +19,7 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async hashData(data: string) {
-    return await argon.hash(data);
-  }
-
-  async signup(dto: AuthDto): Promise<Tokens> {
+  async signup(dto: AuthDto): Promise<{ msg: string; email: string }> {
     // Generate the password hash
     const hash = await this.hashData(dto.password);
 
@@ -36,10 +32,10 @@ export class AuthService {
         },
       });
 
-      const tokens = await this.signToken(user.id, user.email);
-      await this.refreshTokens(user.id, tokens['refresh_token']);
-
-      return tokens;
+      return {
+        msg: 'User has been created successfully',
+        email: user.email,
+      };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -52,7 +48,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: AuthDto): Promise<Tokens> {
+  async login(dto: AuthDto): Promise<LoginResponse> {
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
@@ -65,10 +61,61 @@ export class AuthService {
 
     if (!pwMatches) throw new ForbiddenException('Credentials are incorrect');
 
-    return this.signToken(user.id, user.email);
+    const tokens = await this.signToken(user.id, user.email);
+    await this.updateRTHash(user.id, tokens['refresh_token']);
+
+    return { ...tokens, expiresIn: ACCESS_TOKEN_EXPIRATION };
   }
 
-  async signToken(userId: number, email: string): Promise<Tokens> {
+  async refreshTokens(userId: number, refreshToken: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user || !user.hashedRt) throw new ForbiddenException('Access denied');
+
+    const refreshTokenMatches = await argon.verify(user.hashedRt, refreshToken);
+    if (!refreshTokenMatches) throw new ForbiddenException('Access denied');
+
+    const tokens = await this.signToken(user.id, user.email);
+    await this.updateRTHash(user.id, tokens['refresh_token']);
+
+    return { ...tokens, expiresIn: ACCESS_TOKEN_EXPIRATION };
+  }
+
+  async logout(userId: number) {
+    await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        hashedRt: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRt: null,
+      },
+    });
+  }
+
+  // Util methods
+  private async hashData(data: string) {
+    return await argon.hash(data);
+  }
+
+  private async updateRTHash(userId: number, refreshToken: string) {
+    const hash = await this.hashData(refreshToken);
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedRt: hash,
+      },
+    });
+  }
+
+  private async signToken(userId: number, email: string): Promise<Tokens> {
     const payload = {
       sub: userId,
       email,
@@ -91,31 +138,5 @@ export class AuthService {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
-  }
-
-  async refreshTokens(userId: number, refreshToken: string) {
-    const hash = await this.hashData(refreshToken);
-    await this.prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        hashedRt: hash,
-      },
-    });
-  }
-
-  async logout(userId: number) {
-    await this.prisma.user.updateMany({
-      where: {
-        id: userId,
-        hashedRt: {
-          not: null,
-        },
-      },
-      data: {
-        hashedRt: null,
-      },
-    });
   }
 }

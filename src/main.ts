@@ -9,6 +9,9 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
+  // This is one way to put dependencies in main for something you use globally
+  // const reflector = new Reflector()
+  // app.useGlobalGuards(new JwtGuard(reflector));
   await app.listen(3500);
 }
 bootstrap();
