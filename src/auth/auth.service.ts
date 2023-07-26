@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -9,7 +13,7 @@ import {
   REFRESH_TOKEN_EXPIRATION,
 } from './constants/tokens.constants';
 import { AuthDto } from './dto';
-import { LoginResponse, Tokens } from './types';
+import { Tokens } from './types';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +26,13 @@ export class AuthService {
   async signup(dto: AuthDto): Promise<{ msg: string; email: string }> {
     // Generate the password hash
     const hash = await this.hashData(dto.password);
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    if (existingUser) throw new BadRequestException('User already exists');
 
     try {
       // Save the new user in DB
@@ -48,7 +59,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: AuthDto): Promise<LoginResponse> {
+  async login(dto: AuthDto): Promise<Tokens> {
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
@@ -64,7 +75,7 @@ export class AuthService {
     const tokens = await this.signToken(user.id, user.email);
     await this.updateRTHash(user.id, tokens['refresh_token']);
 
-    return { ...tokens, expiresIn: ACCESS_TOKEN_EXPIRATION };
+    return tokens;
   }
 
   async refreshTokens(userId: number, refreshToken: string) {
@@ -81,7 +92,7 @@ export class AuthService {
     const tokens = await this.signToken(user.id, user.email);
     await this.updateRTHash(user.id, tokens['refresh_token']);
 
-    return { ...tokens, expiresIn: ACCESS_TOKEN_EXPIRATION };
+    return { ...tokens };
   }
 
   async logout(userId: number) {
@@ -99,11 +110,11 @@ export class AuthService {
   }
 
   // Util methods
-  private async hashData(data: string) {
+  async hashData(data: string) {
     return await argon.hash(data);
   }
 
-  private async updateRTHash(userId: number, refreshToken: string) {
+  async updateRTHash(userId: number, refreshToken: string) {
     const hash = await this.hashData(refreshToken);
     await this.prisma.user.update({
       where: {
@@ -115,7 +126,7 @@ export class AuthService {
     });
   }
 
-  private async signToken(userId: number, email: string): Promise<Tokens> {
+  async signToken(userId: number, email: string): Promise<Tokens> {
     const payload = {
       sub: userId,
       email,
@@ -129,10 +140,14 @@ export class AuthService {
       secret: secretAt,
     });
 
+    const accessCookie = `ACCESS_TOKEN=${accessToken}; HttpOnly; Path=/; Max-Age=${ACCESS_TOKEN_EXPIRATION}`;
+
     const refreshToken = await this.jwt.signAsync(payload, {
       expiresIn: REFRESH_TOKEN_EXPIRATION,
       secret: secretRt,
     });
+
+    const refreshCookie = `REFRESH_TOKEN=${refreshToken}; HttpOnly; Path=/; Max-Age=${REFRESH_TOKEN_EXPIRATION}`;
 
     return {
       access_token: accessToken,
