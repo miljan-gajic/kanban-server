@@ -17,6 +17,9 @@ dependencies:
   '@nestjs/jwt':
     specifier: ^10.1.0
     version: 10.1.0(@nestjs/common@10.0.0)
+  '@nestjs/mapped-types':
+    specifier: '*'
+    version: 0.0.1(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)
   '@nestjs/passport':
     specifier: ^10.0.0
     version: 10.0.0(@nestjs/common@10.0.0)(passport@0.6.0)
@@ -1018,6 +1021,18 @@ packages:
       '@nestjs/common': 10.0.0(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       '@types/jsonwebtoken': 9.0.2
       jsonwebtoken: 9.0.0
+    dev: false
+
+  /@nestjs/mapped-types@0.0.1(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13):
+    resolution: {integrity: sha512-4G4Ui7Sj0UqXiZsUFk/6cPD3K7uZEFSElzkOftaJ3/lXW+HUi1/vfWXabF53qrzO1enTRQDxt1plDbP6SsqXEg==}
+    peerDependencies:
+      class-transformer: ^0.2.3
+      class-validator: ^0.11.1
+      reflect-metadata: ^0.1.12
+    dependencies:
+      class-transformer: 0.5.1
+      class-validator: 0.14.0
+      reflect-metadata: 0.1.13
     dev: false
 
   /@nestjs/passport@10.0.0(@nestjs/common@10.0.0)(passport@0.6.0):

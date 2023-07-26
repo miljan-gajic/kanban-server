@@ -10,6 +10,9 @@ export class UserService {
       where: {
         id: userId,
       },
+      include: {
+        tasks: true,
+      },
     });
 
     if (!user)

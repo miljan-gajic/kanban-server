@@ -6,6 +6,7 @@ import { JwtGuard } from './auth/guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { TaskModule } from './task/task.module';
 import { UserModule } from './user/user.module';
+import { SubtaskModule } from './subtask/subtask.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserModule } from './user/user.module';
     UserModule,
     TaskModule,
     PrismaModule,
+    SubtaskModule,
   ],
   providers: [
     {
