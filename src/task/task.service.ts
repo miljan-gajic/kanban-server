@@ -7,6 +7,7 @@ import { Status } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskPayload } from './types/task.types';
 
 @Injectable()
 export class TaskService {
@@ -16,12 +17,6 @@ export class TaskService {
     const existingTask = await this.prisma.task.findFirst({
       where: {
         title: dto.title,
-      },
-    });
-
-    const user = await this.prisma.user.findFirst({
-      where: {
-        id: userId,
       },
     });
 
@@ -90,7 +85,7 @@ export class TaskService {
     };
   }
 
-  async updateTask(dto: CreateTaskDto, taskId: string, userId: number) {
+  async updateTask(dto: UpdateTaskPayload, taskId: string, userId: number) {
     const existingTask = await this.retrieveTheTaskById(taskId, userId);
 
     if (!existingTask) {
@@ -111,9 +106,9 @@ export class TaskService {
         ],
       },
       data: {
-        title: dto.title,
-        description: dto.description,
-        status: dto.status,
+        title: dto.title ?? existingTask.title,
+        description: dto.description ?? existingTask.description,
+        status: dto.status ?? existingTask.status,
       },
     });
 
@@ -160,14 +155,17 @@ export class TaskService {
     }
   }
 
-  async deleteTask(taskId: string) {
-    try {
-      await this.removeTheTaskById(taskId);
-    } catch (error) {
+  async deleteTask(taskId: string, userId: number) {
+    const deletedTask = await this.removeTheTaskById(taskId, userId);
+
+    if (!deletedTask || !deletedTask.count)
       throw new BadRequestException(
         'The Task that was meant to be deleted was not found',
       );
-    }
+
+    return {
+      deleted: `Successfully deleted - ${deletedTask.count}`,
+    };
   }
 
   // Util methods
@@ -192,11 +190,20 @@ export class TaskService {
     return existingTask;
   }
 
-  async removeTheTaskById(taskId: string) {
-    await this.prisma.task.delete({
+  async removeTheTaskById(taskId: string, userId: number) {
+    const deletedTask = await this.prisma.task.deleteMany({
       where: {
-        id: typeof taskId === 'string' ? Number(taskId) : taskId,
+        AND: [
+          {
+            id: typeof taskId === 'string' ? Number(taskId) : taskId,
+          },
+          {
+            autherId: userId,
+          },
+        ],
       },
     });
+
+    return deletedTask;
   }
 }

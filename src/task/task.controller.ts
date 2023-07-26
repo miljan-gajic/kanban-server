@@ -15,6 +15,7 @@ import { Status } from '@prisma/client';
 import { GetUser } from 'src/auth/decorators';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskService } from './task.service';
+import { UpdateTaskPayload } from './types/task.types';
 
 @Controller('task')
 export class TaskController {
@@ -44,7 +45,7 @@ export class TaskController {
   @HttpCode(HttpStatus.OK)
   @Put('/edit_task/:id')
   updateTask(
-    @Body() dto: CreateTaskDto,
+    @Body() dto: UpdateTaskPayload,
     @Param('id') taskId: string,
     @GetUser('userId') userId: number,
   ) {
@@ -63,7 +64,7 @@ export class TaskController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete('/task/:id')
-  deleteTask(@Param('id') taskId: string) {
-    return this.taskService.deleteTask(taskId);
+  deleteTask(@Param('id') taskId: string, @GetUser('userId') userId: number) {
+    return this.taskService.deleteTask(taskId, userId);
   }
 }
