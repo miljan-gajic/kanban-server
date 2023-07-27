@@ -24,7 +24,7 @@
     "db-dev:restart": "pnpm run db-dev:rm && pnpm run db-dev:up && sleep 1 && pnpm run prisma-dev:deploy && sleep 1 && npx prisma db seed"
   },
   "prisma": {
-    "seed": "ts-node ./seed.ts"
+    "seed": "ts-node ./prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
