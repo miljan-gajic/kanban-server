@@ -1,34 +1,67 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { SubtaskService } from './subtask.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { Status } from '@prisma/client';
+import { GetUser } from 'src/auth/decorators';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
-import { UpdateSubtaskDto } from './dto/update-subtask.dto';
+import { SubtaskService } from './subtask.service';
 
-@Controller('subtask')
+@Controller('task/subtask')
 export class SubtaskController {
   constructor(private readonly subtaskService: SubtaskService) {}
 
-  @Post()
-  create(@Body() createSubtaskDto: CreateSubtaskDto) {
-    return this.subtaskService.create(createSubtaskDto);
+  @Post('/:taskId')
+  createSubtask(
+    @Body() createSubtaskDto: CreateSubtaskDto,
+    @Param('taskId') taskId: string,
+    @GetUser('userId') userId: number,
+  ) {
+    return this.subtaskService.createSubtask(createSubtaskDto, +taskId, userId);
   }
 
-  @Get()
-  findAll() {
-    return this.subtaskService.findAll();
+  @Put('/:taskId')
+  updateSubtask(
+    @Param('taskId') taskId: string,
+    @Body() updateSubtaskDto: Partial<CreateSubtaskDto>,
+    @Query('subtask') subtaskId: string,
+    @GetUser('userId') userId: number,
+  ) {
+    return this.subtaskService.updateSubtask(
+      +taskId,
+      updateSubtaskDto,
+      +subtaskId,
+      userId,
+    );
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.subtaskService.findOne(+id);
+  @Patch('/:taskId')
+  updateSubtaskStatus(
+    @Param('taskId') taskId: string,
+    @GetUser('userId') userId: number,
+    @Query('subtask') subtaskId: string,
+    @Query('status') status: Status,
+  ) {
+    return this.subtaskService.updateSubtaskStatus(
+      +taskId,
+      +subtaskId,
+      userId,
+      status,
+    );
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSubtaskDto: UpdateSubtaskDto) {
-    return this.subtaskService.update(+id, updateSubtaskDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.subtaskService.remove(+id);
+  @Delete('/:taskId')
+  removeSubtask(
+    @Param('taskId') taskId: string,
+    @Query('subtask') subtaskId: string,
+    @GetUser('userId') userId: number,
+  ) {
+    return this.subtaskService.removeSubtask(+taskId, +subtaskId, userId);
   }
 }

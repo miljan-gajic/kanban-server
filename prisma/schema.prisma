@@ -43,7 +43,8 @@ model Subtask {
   title       String
   description String
   status      Status @default(TODO)
-  hostTask    Task   @relation(fields: [id], references: [id])
+  hostTask    Task?  @relation(fields: [taskId], references: [id])
+  taskId      Int?
 
   @@map("subtasks")
 }

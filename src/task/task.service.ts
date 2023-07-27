@@ -16,7 +16,14 @@ export class TaskService {
   async createTask(dto: CreateTaskDto, userId: number) {
     const existingTask = await this.prisma.task.findFirst({
       where: {
-        title: dto.title,
+        AND: [
+          {
+            title: dto.title,
+          },
+          {
+            autherId: userId,
+          },
+        ],
       },
     });
 
