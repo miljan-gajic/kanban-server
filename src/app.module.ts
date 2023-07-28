@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { TaskModule } from './task/task.module';
 import { UserModule } from './user/user.module';
 import { SubtaskModule } from './subtask/subtask.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SubtaskModule } from './subtask/subtask.module';
     TaskModule,
     PrismaModule,
     SubtaskModule,
+    AdminModule,
   ],
   providers: [
     {

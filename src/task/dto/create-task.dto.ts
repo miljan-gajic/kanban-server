@@ -1,8 +1,8 @@
 import { Status } from '@prisma/client';
 import {
-  IsDefined,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -22,6 +22,6 @@ export class CreateTaskDto {
   description: string;
 
   @IsEnum(Status)
-  @IsDefined()
+  @IsOptional()
   status: Status;
 }

@@ -6,9 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -18,6 +18,7 @@ model User {
   firstName String?
   lastName  String?
   tasks     Task[]
+  role      Role     @default(USER)
   hashedRt  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -54,4 +55,10 @@ enum Status {
   DONE
   IN_PROGRESS
   TODO
+}
+
+enum Role {
+  ADMIN
+  SUPER_USER
+  USER
 }
