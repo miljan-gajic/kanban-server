@@ -6,7 +6,8 @@ import {
   HttpStatus,
   UseInterceptors,
 } from '@nestjs/common';
-import { GetUser } from '../auth/decorators';
+import { Role } from '@prisma/client';
+import { GetUser, Roles } from '../auth/decorators';
 import { UserService } from './user.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
@@ -16,6 +17,7 @@ export class UserController {
 
   @HttpCode(HttpStatus.OK)
   @Get('current_user')
+  @Roles(Role.ADMIN)
   async currentUser(@GetUser('userId') userId: number) {
     return this.userService.getCurrentUser(userId);
   }
