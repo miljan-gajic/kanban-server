@@ -29,7 +29,7 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
-    }
+    },
   ],
 })
 export class AppModule {}

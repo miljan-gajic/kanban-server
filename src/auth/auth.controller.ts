@@ -1,15 +1,19 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
+import { Request as TRequest } from 'express';
 import { AuthService } from './auth.service';
 import { GetUser, Public } from './decorators';
 import { AuthDto } from './dto';
 import { JwtRTGuard } from './guard';
+import { GoogleOAuthGuard } from './guard/google.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -44,5 +48,19 @@ export class AuthController {
     @GetUser('refreshToken') refreshToken: string,
   ) {
     return this.authService.refreshTokens(userId, refreshToken);
+  }
+
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Get('google/login')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuth(@Request() req) {}
+
+  @Public()
+  @UseGuards(GoogleOAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Get('google/redirect')
+  googleLogIn(@Request() req: TRequest) {
+    return this.authService.googleLogIn(req);
   }
 }

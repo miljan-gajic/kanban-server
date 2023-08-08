@@ -1,26 +1,29 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
-  Post,
+  UseInterceptors,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
+import { GetUser, Roles } from 'src/auth/decorators';
 import { AdminService } from './admin.service';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post()
-  create(@Body() createAdminDto: any) {
-    return this.adminService.create(createAdminDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.adminService.findAll();
+  @HttpCode(HttpStatus.OK)
+  @Get('/users')
+  @Roles(Role.ADMIN)
+  findAll(@GetUser('role') role: Role) {
+    return this.adminService.findAllUsers(role);
   }
 
   @Get(':id')

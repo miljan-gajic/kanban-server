@@ -109,6 +109,17 @@ export class AuthService {
     });
   }
 
+  async googleLogIn(req) {
+    if (!req.user) {
+      return 'No user from google';
+    }
+
+    return {
+      message: 'User information from google',
+      user: req.user,
+    };
+  }
+
   // Util methods
   async hashData(data: string) {
     return await argon.hash(data);
